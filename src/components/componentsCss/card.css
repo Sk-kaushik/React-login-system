@@ -1,0 +1,88 @@
+.tinder-card-container {
+  height: 80vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.card {
+  width: 650px;
+  height: 550px;
+  /* background: rgb(167, 167, 167); */
+  padding: 0 20px;
+  border-radius: 20px;
+  box-shadow: 5px 5px 20px rgb(136, 136, 136);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.swipe {
+  position: absolute;
+}
+
+.greet-container {
+  margin-top: 250px;
+  animation: fadeIn 1s forwards;
+}
+.greet {
+  font-size: 1.5em;
+  font-weight: 600;
+  transition: 0.5s;
+}
+
+.greet-images {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 80px;
+  color: rgb(49, 49, 49);
+}
+.greet-images h4 {
+  font-size: 1.4em;
+  font-weight: 500;
+  margin-top: 10px;
+}
+.greet-images span {
+  margin-right: 5px;
+  color: red;
+}
+.greet-images p {
+  font-weight: 500;
+}
+.greet-images-data {
+  width: 200px;
+  text-align: center;
+  padding: 10px 0;
+  box-shadow: 2px 2px 20px rgb(228, 228, 228);
+}
+
+.reset-btn-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+.reset-btn-container button {
+  width: 200px;
+  text-align: center;
+  padding: 10px 0;
+  border: none;
+  background: #0d6efd;
+  color: white;
+  border-radius: 5px;
+  margin-top: 80px;
+}
+.reset-btn-container button:hover {
+  background: #065fe4;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(100px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
