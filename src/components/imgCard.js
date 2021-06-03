@@ -1,114 +1,143 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import TinderCard from "react-tinder-card";
 import { Alert } from "react-bootstrap";
 import "./componentsCss/card.css";
 import { useAuth } from "../context/AuthContext";
 
+const db = [
+  {
+    id: 5,
+    name: "five",
+    url: "./five.png",
+  },
+  {
+    id: 4,
+    name: "four",
+    url: "./four.png",
+  },
+  {
+    id: 3,
+    name: "three",
+    url: "./three.png",
+  },
+  {
+    id: 2,
+    name: "two",
+    url: "./two.png",
+  },
+
+  {
+    id: 1,
+    name: "one",
+    url: "./one.png",
+  },
+];
+const alreadyRemoved = [];
+let charactersState = db;
+
 export default function ImgCard({
   setRejectedImages,
   setLikedImages,
   saveToLocalStorage,
-  rejectedImages,
   isLast,
   setIsLast,
   likedData,
   rejectedData,
-  setRejectedData,
-  setLikedData,
-  // userName,
 }) {
-  // const alreadyRemoved = [];
-
   const { currentUser } = useAuth();
   const [isRejected, setIsRejected] = useState(null);
   const [isLiked, setIsLiked] = useState(null);
   const [imgName, setImgName] = useState();
-
-  const [people, setPeople] = useState([
-    {
-      id: 5,
-      name: "five",
-      url: "./five.png",
-    },
-    {
-      id: 4,
-      name: "four",
-      url: "./four.png",
-    },
-    {
-      id: 3,
-      name: "three",
-      url: "./three.png",
-    },
-    {
-      id: 2,
-      name: "two",
-      url: "./two.png",
-    },
-
-    {
-      id: 1,
-      name: "one",
-      url: "./one.png",
-    },
-  ]);
-  // const swipe = (dir) => {
-  //   const cardsLeft = people.filter(
-  //     (person) => !alreadyRemoved.includes(person.name)
-  //   );
-  //   if (cardsLeft.length) {
-  //     const toBeRemoved = cardsLeft[cardsLeft.length - 1].name; // Find the card object to be removed
-  //     const index = db.map((person) => person.name).indexOf(toBeRemoved); // Find the index of which to make the reference to
-  //     alreadyRemoved.push(toBeRemoved); // Make sure the next card gets removed next time if this card do not have time to exit the screen
-  //     childRefs[index].current.swipe(dir); // Swipe the card!
-  //   }
-  // };
+  const [imgDb, setImgDb] = useState(db);
+  const [intervalCounter, setIntervalCounter] = useState(1000);
+  const timeout = useRef();
+  const childRefs = useMemo(
+    () =>
+      Array(db.length)
+        .fill(0)
+        .map((i) => React.createRef()),
+    []
+  );
 
   function keyboardKeyPressed(e) {
     if (e.key === "ArrowRight") {
-      console.log("right");
-      onSwipe("right");
-      // swipe("left");
+      swipe("right");
     }
     if (e.key === "ArrowLeft") {
-      console.log("left");
-      onSwipe("left");
+      swipe("left");
+    } else {
+      return;
     }
-    console.log("key pressed");
   }
 
   useEffect(() => {
-    document.addEventListener("keydown", keyboardKeyPressed);
-  }, [isLast, rejectedData, likedData]);
+    if (childRefs.length) {
+      window.addEventListener("keydown", keyboardKeyPressed);
+      timeout.current = setTimeout(() => {
+        swipe("left");
+        setIntervalCounter(intervalCounter + 1);
+      }, 5000);
+    }
+    return () => clearTimeout(timeout);
+  }, [intervalCounter]);
 
   const onSwipe = (direction, currentImgName) => {
     setImgName(currentImgName);
+    alreadyRemoved.push(currentImgName);
+
     if (direction === "left") {
       setIsRejected(true);
       setIsLiked(false);
-      console.log("left");
-      if (direction === "left") {
-        setRejectedImages((prevArray) => [
-          ...prevArray,
-          { userName: currentUser.displayName, imgName: currentImgName },
-        ]);
-      }
+
+      setRejectedImages((prevArray) => [
+        ...prevArray,
+        { userName: currentUser.displayName, imgName: currentImgName },
+      ]);
     } else if (direction === "right") {
       setIsRejected(null);
       setIsLiked(true);
-      console.log("right");
+      console.log(childRefs);
+
       setLikedImages((prevArray) => [
         ...prevArray,
         { userName: currentUser.displayName, imgName: currentImgName },
       ]);
     }
-    if (currentImgName === people[0].name) {
+
+    if (currentImgName === db[0].name) {
       setIsLast(true);
       saveToLocalStorage();
     }
   };
 
-  const onCardLeftScreen = (dir, name) => {};
+  const onCardLeftScreen = (dir, name) => {
+    charactersState = charactersState.filter(
+      (character) => character.name !== name
+    );
+
+    setImgDb(charactersState);
+  };
+
+  const swipe = (dir) => {
+    try {
+      const cardsLeft = imgDb.filter(
+        (person) => !alreadyRemoved.includes(person.name)
+      );
+
+      if (cardsLeft.length) {
+        const toBeRemoved = cardsLeft[cardsLeft.length - 1].name;
+
+        const index = db.map((person) => person.name).indexOf(toBeRemoved);
+
+        alreadyRemoved.push(toBeRemoved);
+        if (index >= 0) {
+          childRefs[index].current.swipe(dir);
+        }
+      } else {
+        return;
+      }
+    } catch {}
+  };
 
   function userFromStorage() {
     if (
@@ -119,24 +148,27 @@ export default function ImgCard({
     } else {
       return (
         <div className="tinder-card-container">
-          {people.map((person) => {
+          {imgDb.map((person, index) => {
             return (
-              <TinderCard
-                className="swipe"
-                key={person.id}
-                preventSwipe={["up", "down"]}
-                onSwipe={(dir) => {
-                  onSwipe(dir, person.name);
-                }}
-                onCardLeftScreen={(dir) => onCardLeftScreen(dir, person.name)}
-              >
-                <div
-                  style={{
-                    backgroundImage: `url(${person.url})`,
+              <>
+                <TinderCard
+                  ref={childRefs[index]}
+                  key={new Date().now}
+                  className="swipe"
+                  preventSwipe={["up", "down"]}
+                  onSwipe={(dir) => {
+                    onSwipe(dir, person.name);
                   }}
-                  className="card"
-                ></div>
-              </TinderCard>
+                  onCardLeftScreen={(dir) => onCardLeftScreen(dir, person.name)}
+                >
+                  <div
+                    style={{
+                      backgroundImage: `url(${person.url})`,
+                    }}
+                    className="card"
+                  ></div>
+                </TinderCard>
+              </>
             );
           })}
           {isRejected && (
@@ -144,7 +176,7 @@ export default function ImgCard({
               variant="danger"
               style={{ position: "absolute", bottom: "20px" }}
             >
-              {currentUser.displayName + " rejected " + imgName}
+              {currentUser.displayName + ",you have rejected image " + imgName}
             </Alert>
           )}
           {isLiked && (
@@ -152,7 +184,7 @@ export default function ImgCard({
               variant="success"
               style={{ position: "absolute", bottom: "20px" }}
             >
-              {currentUser.displayName + " liked " + imgName}
+              {currentUser.displayName + ",you have selected image " + imgName}
             </Alert>
           )}
         </div>
@@ -163,10 +195,11 @@ export default function ImgCard({
   return (
     <>
       {currentUser && <div className="tinder-cards">{userFromStorage()}</div>}
+
       {isLast && (
         <>
           <div className="greet-container">
-            <h1 className="greet">Thank You, you have rated all the images</h1>
+            <h1 className="greet">You have rated all the images,Thank You!</h1>
             <div className="greet-images">
               <div className="greet-images-data">
                 <h4>
@@ -185,6 +218,8 @@ export default function ImgCard({
                 <p> Liked Images</p>
               </div>
             </div>
+            {/* ------RESET AND CLEAR LOCAL STORAGE----------------
+            
             <div className="reset-btn-container">
               <button
                 onClick={(e) => {
@@ -201,7 +236,7 @@ export default function ImgCard({
               >
                 Reset Data
               </button>
-            </div>
+            </div> */}
           </div>
         </>
       )}
