@@ -79,7 +79,7 @@ export default function ImgCard({
       }, 5000);
     }
     return () => clearTimeout(timeout);
-  }, [intervalCounter]);
+  }, [isLast, intervalCounter]);
 
   const onSwipe = (direction, currentImgName) => {
     setImgName(currentImgName);

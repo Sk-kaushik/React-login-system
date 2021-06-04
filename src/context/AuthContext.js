@@ -16,8 +16,22 @@ export function AuthProvider(props) {
   const [cap, setCap] = useState();
   let history = useHistory();
   let recaptchaVerifier;
-
   let captcha;
+
+  useEffect(() => {
+    let unsubscribe = auth.onAuthStateChanged(function (user) {
+      if (user) {
+        setCurrentUser(user);
+        setLoading(false);
+        history.push("/");
+      } else {
+        // No user is signed in.
+        setCurrentUser(null);
+        history.push("/signin");
+      }
+    });
+    return unsubscribe;
+  }, [currentUser, history, cap]);
 
   function recaptchaShow(phone) {
     setLoading(true);
@@ -42,21 +56,6 @@ export function AuthProvider(props) {
 
     return captcha;
   }
-  useEffect(() => {
-    let unsubscribe = auth.onAuthStateChanged(function (user) {
-      if (user) {
-        setCurrentUser(user);
-        setLoading(false);
-        history.push("/");
-      } else {
-        // No user is signed in.
-        setCurrentUser(null);
-        history.push("/signin");
-      }
-    });
-
-    return unsubscribe;
-  }, [currentUser, history, cap]);
 
   function showCaptch(phone) {
     console.log(phone);
@@ -114,14 +113,15 @@ export function AuthProvider(props) {
   }
 
   function updateUser(userName) {
+    setLoading(true);
     currentUser
       .updateProfile({
         displayName: userName,
       })
       .then((res) => {
-        setLoading(true);
+        setLoading(false);
+        console.log("user is updated");
       });
-    setLoading(false);
     return currentUser;
   }
 

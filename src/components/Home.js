@@ -7,23 +7,17 @@ import Loader from "../res/loader.gif";
 import "./componentsCss/home.css";
 
 export default function Home() {
-  const { currentUser, updateUser, removeUser, loading } = useAuth();
+  const { currentUser, updateUser, loading } = useAuth();
   const [rejectedImages, setRejectedImages] = useState([]);
   const [likedImages, setLikedImages] = useState([]);
   const [isLast, setIsLast] = useState(false);
-  const [dataFromLocalStorage, setDataFromLocalStorage] = useState([]);
   const [rejectedData, setRejectedData] = useState([]);
   const [likedData, setLikedData] = useState([]);
 
   function setUserDetail(e) {
     let user = document.querySelector(".user-name").value;
-    // console.log(user);
     updateUser(user);
   }
-
-  // function removeUserName() {
-  //   removeUser();
-  // }
 
   function saveToLocalStorage() {
     if (rejectedImages !== null || likedImages !== null) {
@@ -62,21 +56,14 @@ export default function Home() {
         );
         setLikedData(itemArray);
       }
-    } catch {
-      console.log("error");
-    }
+    } catch {}
   }
 
   useEffect(() => {
-    // setRejectedImages([]);
-    // setLikedImages([]);
-    // if (rejectedImages.length > 0) {
-    //   console.log(rejectedImages);
-    // }
     saveToLocalStorage();
     getDataFromLocalStorage();
     console.log(currentUser.uid);
-  }, [isLast]);
+  }, [isLast, currentUser.displayName]);
 
   return (
     <div className="home-container">
@@ -108,7 +95,13 @@ export default function Home() {
             <div className="name">
               <input type="text" className="user-name" />
             </div>
-            <button onClick={setUserDetail}>Done</button>
+            <button onClick={setUserDetail}>
+              {loading ? (
+                <img src={Loader} id="loader" alt="" />
+              ) : (
+                <span>Done</span>
+              )}
+            </button>
           </div>
           <div className="overlay"></div>
         </>
